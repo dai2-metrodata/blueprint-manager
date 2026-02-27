@@ -24,6 +24,8 @@ Blueprints are templates for best-practice Snowflake implementation and setup co
 **Cortex Code Skills**  
 Blueprints run inside Cortex Code via the $blueprint-builder skill and the $best-practices-skill. Skills are instructions that tell Cortex Code how to navigate and execute Blueprints, and guide the AI to the right best practices based on your inputs to ensure correct outputs for your specific requirements.
 
+*Think of Blueprints as the "cookbook" containing all the implementation recipes and expertise, and Skills as the "index" that helps Cortex Code find and follow the right recipe for your needs.*
+
 <img width="6800" height="1200" alt="Blueprint Manager Cortex Code Overview" src="https://github.com/user-attachments/assets/6434d217-395d-4092-916a-e32944b41f39" />
 
 # Blueprint Manager
