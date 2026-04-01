@@ -1,0 +1,155 @@
+# =============================================================================
+# Platform Foundation Setup - AcmeCorp Answer File
+# Blueprint: blueprint_4d563df2
+# Company: AcmeCorp - Enterprise Production Setup
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Account Strategy & Naming
+# -----------------------------------------------------------------------------
+account_strategy: Multi-Account (Environment-based)
+snowflake_org_name: ACMECORP
+account_name_prefix: ACME
+object_component_order: <domain>_<env>_<dataproduct>
+
+# -----------------------------------------------------------------------------
+# Organization Account Configuration
+# -----------------------------------------------------------------------------
+enable_org_account: Yes
+org_account_name: ACME_ORG
+org_account_edition: ENTERPRISE
+org_account_region: us-east-2
+org_admin_name: platform_admin
+org_admin_email: platform-admin@acmecorp.com
+
+# -----------------------------------------------------------------------------
+# Platform Structure
+# -----------------------------------------------------------------------------
+governance_name: GOVERNANCE
+platform_database_name: PLAT_INFRA
+infrastructure_replication_group: infrastructure_replication_group
+replication_schedule: Every 30 minutes
+
+zone_list:
+- raw
+- curated
+- consumption
+
+environment_list:
+- dev
+- test
+- prod
+
+domain_list:
+- engineering
+
+# -----------------------------------------------------------------------------
+# Identity & Authentication (Azure AD / Entra ID)
+# -----------------------------------------------------------------------------
+identity_provider: Azure AD (Entra ID)
+human_auth_methods: Password with MFA
+service_auth_methods: Key Pair Only
+configure_saml: Yes
+
+# MFA Configuration
+mfa_method: Either TOTP or Passkey
+preferred_mfa_method: TOTP (Authenticator App)
+mfa_enforcement_timeline: 7 Days - Allow one week for enrollment
+mfa_support_contact: it-helpdesk@acmecorp.com
+apply_auth_policies_account_level: Yes - Apply default policy to all users
+
+# Manual Admin Users (bootstrap admins before SCIM is active)
+manual_admin_users:
+- admin_role: ACCOUNTADMIN
+  email: platform-admin@acmecorp.com
+  first_name: Platform
+  last_name: Admin
+  username: PLATFORM_ADMIN
+- admin_role: SYSADMIN
+  email: sysadmin@acmecorp.com
+  first_name: System
+  last_name: Admin
+  username: SYS_ADMIN
+- admin_role: SECURITYADMIN
+  email: security-admin@acmecorp.com
+  first_name: Security
+  last_name: Admin
+  username: SECURITY_ADMIN
+
+# SAML Configuration (Azure AD / Entra ID)
+saml_integration_name: AZURE_AD_SAML
+saml_issuer: https://sts.windows.net/<AZURE_TENANT_ID>/
+saml_sso_url: https://login.microsoftonline.com/<AZURE_TENANT_ID>/saml2
+saml_certificate: <PASTE_BASE64_CERTIFICATE_FROM_AZURE_AD>
+saml_sso_login_page: Yes
+
+# SCIM Configuration (Azure AD / Entra ID)
+scim_integration_name: AZURE_AD_SCIM
+scim_provisioner_role: AAD_PROVISIONER
+scim_admin_users:
+- admin_role: ACCOUNTADMIN
+  email: platform-admin@acmecorp.com
+  first_name: Platform
+  last_name: Admin
+  username: PLATFORM_ADMIN
+
+# -----------------------------------------------------------------------------
+# Network Security (Enterprise - Restrictive)
+# -----------------------------------------------------------------------------
+enable_account_network_policy: Yes - Apply to all users
+
+allowed_network_rules:
+- ip_addresses: 10.0.0.0/8
+  rule_name: CORPORATE_NETWORK
+- ip_addresses: 172.16.0.0/12
+  rule_name: VPN_ENDPOINTS
+- ip_addresses: 198.51.100.0/24
+  rule_name: CLOUD_SERVICES
+
+blocked_network_rules:
+- ip_addresses: 10.50.0.0/16
+  rule_name: GUEST_WIFI_BLOCK
+
+breakglass_accounts:
+- allowed_ips: 10.0.0.0/8
+  email: breakglass@acmecorp.com
+  username: BREAKGLASS_ADMIN
+- allowed_ips: 172.16.0.0/12
+  email: breakglass-secondary@acmecorp.com
+  username: BREAKGLASS_SECONDARY
+
+# -----------------------------------------------------------------------------
+# Cost Management - Budgets
+# -----------------------------------------------------------------------------
+enable_budgets: Yes
+budget_alert_emails:
+- finops@acmecorp.com
+- platform-admin@acmecorp.com
+- finance-alerts@acmecorp.com
+account_monthly_budget: 6667
+budget_notification_threshold: 75
+budget_refresh_interval: 6.5 hours (default)
+
+# -----------------------------------------------------------------------------
+# Cost Management - Resource Monitors
+# -----------------------------------------------------------------------------
+enable_resource_monitors: Yes
+account_resource_monitor_limit: 7500
+account_resource_monitor_reset_frequency: MONTHLY
+account_resource_monitor_action: Suspend After Current Queries
+
+# -----------------------------------------------------------------------------
+# Cost Management - Tags
+# -----------------------------------------------------------------------------
+enable_cost_tags: Yes
+additional_tag_dimensions:
+- cost_center
+- owner
+- project
+- application
+require_cost_tags: Yes
+
+# -----------------------------------------------------------------------------
+# Initial Account (first environment account to create)
+# -----------------------------------------------------------------------------
+new_account_name: ACME_DEV

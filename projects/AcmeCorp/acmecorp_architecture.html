@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AcmeCorp - Snowflake Architecture Diagram</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0d1117; color: #c9d1d9; margin: 0; padding: 20px; }
+  h1 { text-align: center; color: #58a6ff; margin-bottom: 5px; }
+  h3 { text-align: center; color: #8b949e; margin-top: 0; font-weight: normal; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  .row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .col { flex: 1; min-width: 300px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; height: 100%; }
+  .card h2 { margin-top: 0; font-size: 16px; color: #58a6ff; border-bottom: 1px solid #21262d; padding-bottom: 10px; }
+  .org-box { background: #1c2333; border: 2px solid #1f6feb; border-radius: 10px; padding: 16px; margin: 10px 0; text-align: center; }
+  .org-box .label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+  .org-box .name { font-size: 20px; font-weight: bold; color: #fff; }
+  .org-box .detail { font-size: 12px; color: #8b949e; }
+  .accounts { display: flex; gap: 12px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .acct { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 14px 20px; text-align: center; min-width: 120px; flex: 1; }
+  .acct.dev { border-color: #3fb950; }
+  .acct.test { border-color: #d29922; }
+  .acct.prod { border-color: #f85149; }
+  .acct .env { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .acct.dev .env { color: #3fb950; }
+  .acct.test .env { color: #d29922; }
+  .acct.prod .env { color: #f85149; }
+  .acct .acct-name { font-weight: bold; color: #fff; font-size: 14px; margin-top: 4px; }
+  .arrow-down { text-align: center; color: #30363d; font-size: 24px; line-height: 1; margin: 4px 0; }
+  .zone-flow { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+  .zone { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center; }
+  .zone.raw { background: #1a2332; border: 1px solid #1f6feb; color: #58a6ff; }
+  .zone.curated { background: #1a2e1a; border: 1px solid #238636; color: #3fb950; }
+  .zone.consumption { background: #2a1a2e; border: 1px solid #8957e5; color: #bc8cff; }
+  .zone-arrow { color: #484f58; font-size: 18px; }
+  .list { list-style: none; padding: 0; margin: 8px 0; }
+  .list li { padding: 6px 10px; margin: 4px 0; background: #0d1117; border-radius: 4px; font-size: 13px; border-left: 3px solid #30363d; }
+  .list li.green { border-left-color: #3fb950; }
+  .list li.blue { border-left-color: #58a6ff; }
+  .list li.red { border-left-color: #f85149; }
+  .list li.yellow { border-left-color: #d29922; }
+  .list li.purple { border-left-color: #bc8cff; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 6px; }
+  .badge.on { background: #238636; color: #fff; }
+  .badge.enforce { background: #8957e5; color: #fff; }
+  .badge.warn { background: #9e6a03; color: #fff; }
+  .tag-grid { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .tag { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 4px 10px; font-size: 12px; color: #c9d1d9; }
+  .tag .key { color: #79c0ff; }
+  .threshold-bar { background: #21262d; border-radius: 4px; height: 24px; position: relative; margin: 8px 0; overflow: hidden; }
+  .threshold-fill { height: 100%; border-radius: 4px; }
+  .threshold-marker { position: absolute; top: 0; height: 100%; border-right: 2px dashed; display: flex; align-items: center; }
+  .threshold-label { position: absolute; top: -18px; font-size: 10px; transform: translateX(-50%); white-space: nowrap; }
+  .net-rule { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; margin: 4px 0; background: #0d1117; border-radius: 4px; font-size: 12px; }
+  .net-rule .cidr { font-family: monospace; color: #79c0ff; }
+  .net-rule .status-allow { color: #3fb950; }
+  .net-rule .status-block { color: #f85149; }
+  .admin-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin: 4px 0; background: #0d1117; border-radius: 4px; font-size: 12px; }
+  .admin-row .role-badge { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
+  .role-aa { background: #f851491a; color: #f85149; border: 1px solid #f8514933; }
+  .role-sa { background: #d299221a; color: #d29922; border: 1px solid #d2992233; }
+  .role-sec { background: #58a6ff1a; color: #58a6ff; border: 1px solid #58a6ff33; }
+  .legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; padding: 12px; background: #161b22; border-radius: 8px; border: 1px solid #30363d; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .repl-arrow { text-align: center; color: #58a6ff; font-size: 12px; margin: 6px 0; }
+  .repl-arrow span { display: inline-block; border: 1px dashed #1f6feb; padding: 3px 12px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>AcmeCorp Snowflake Architecture</h1>
+  <h3>Platform Foundation &middot; Multi-Account (Environment-based) &middot; Enterprise Edition</h3>
+
+  <!-- Row 1: Org + Accounts -->
+  <div class="row">
+    <div class="col" style="flex:2">
+      <div class="card">
+        <h2>Organization &amp; Account Strategy</h2>
+        <div class="org-box">
+          <div class="label">Snowflake Organization</div>
+          <div class="name">ACMECORP</div>
+          <div class="detail">Region: us-east-2 &middot; Edition: Enterprise</div>
+        </div>
+        <div class="arrow-down">&darr;</div>
+        <div class="org-box" style="border-color: #8957e5;">
+          <div class="label">Organization Account (Hub)</div>
+          <div class="name">ACME_ORG</div>
+          <div class="detail">PLAT_INFRA database &middot; GOVERNANCE schema &middot; Shared tags &amp; policies</div>
+        </div>
+        <div class="repl-arrow"><span>&#8693; DB Replication &middot; Every 30 min</span></div>
+        <div class="accounts">
+          <div class="acct dev">
+            <div class="env">Development</div>
+            <div class="acct-name">ACME_DEV</div>
+          </div>
+          <div class="acct test">
+            <div class="env">Test / Staging</div>
+            <div class="acct-name">ACME_TEST</div>
+          </div>
+          <div class="acct prod">
+            <div class="env">Production</div>
+            <div class="acct-name">ACME_PROD</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <h2>Data Zone Architecture</h2>
+        <p style="font-size:12px;color:#8b949e;margin:0 0 8px;">Each environment account uses a medallion zone layout:</p>
+        <div class="zone-flow">
+          <div class="zone raw">RAW</div>
+          <div class="zone-arrow">&rarr;</div>
+          <div class="zone curated">CURATED</div>
+          <div class="zone-arrow">&rarr;</div>
+          <div class="zone consumption">CONSUMPTION</div>
+        </div>
+        <p style="font-size:12px;color:#8b949e;margin:14px 0 6px;">Domain: <strong style="color:#c9d1d9;">engineering</strong></p>
+        <p style="font-size:12px;color:#8b949e;margin:0 0 6px;">Naming pattern: <code style="color:#79c0ff;">&lt;domain&gt;_&lt;env&gt;_&lt;dataproduct&gt;</code></p>
+        <p style="font-size:12px;color:#8b949e;margin:14px 0 6px;">Example databases in ACME_PROD:</p>
+        <ul class="list">
+          <li class="blue">ENGINEERING_PROD_RAW</li>
+          <li class="green">ENGINEERING_PROD_CURATED</li>
+          <li class="purple">ENGINEERING_PROD_CONSUMPTION</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Identity + Network Security -->
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <h2>Identity &amp; Authentication</h2>
+        <ul class="list">
+          <li class="blue">IdP: <strong>Azure AD (Entra ID)</strong></li>
+          <li class="blue">SCIM: <strong>AZURE_AD_SCIM</strong> &middot; Role: AAD_PROVISIONER</li>
+          <li class="blue">SAML/SSO: <strong>AZURE_AD_SAML</strong></li>
+          <li class="green">Humans: Password + MFA <span class="badge on">Enforced</span></li>
+          <li class="green">Services: Key Pair Only <span class="badge on">Enforced</span></li>
+          <li class="yellow">MFA: TOTP preferred &middot; 7-day enrollment window</li>
+          <li class="purple">Auth policy applied: <strong>Account-level (all users)</strong></li>
+        </ul>
+        <p style="font-size:12px;color:#8b949e;margin:12px 0 6px;">Bootstrap Administrators:</p>
+        <div class="admin-row"><span class="role-badge role-aa">ACCOUNTADMIN</span> PLATFORM_ADMIN</div>
+        <div class="admin-row"><span class="role-badge role-sa">SYSADMIN</span> SYS_ADMIN</div>
+        <div class="admin-row"><span class="role-badge role-sec">SECURITYADMIN</span> SECURITY_ADMIN</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <h2>Network Security</h2>
+        <p style="font-size:12px;margin:0 0 8px;">Account-level network policy <span class="badge enforce">All Users</span></p>
+        <p style="font-size:12px;color:#8b949e;margin:8px 0 4px;">Allowed:</p>
+        <div class="net-rule"><span>CORPORATE_NETWORK</span><span class="cidr">10.0.0.0/8</span><span class="status-allow">ALLOW</span></div>
+        <div class="net-rule"><span>VPN_ENDPOINTS</span><span class="cidr">172.16.0.0/12</span><span class="status-allow">ALLOW</span></div>
+        <div class="net-rule"><span>CLOUD_SERVICES</span><span class="cidr">198.51.100.0/24</span><span class="status-allow">ALLOW</span></div>
+        <p style="font-size:12px;color:#8b949e;margin:8px 0 4px;">Blocked:</p>
+        <div class="net-rule"><span>GUEST_WIFI_BLOCK</span><span class="cidr">10.50.0.0/16</span><span class="status-block">BLOCK</span></div>
+        <p style="font-size:12px;color:#8b949e;margin:12px 0 4px;">Break-Glass Emergency Access:</p>
+        <div class="net-rule"><span>BREAKGLASS_ADMIN</span><span class="cidr">10.0.0.0/8</span><span class="status-allow">ALLOW</span></div>
+        <div class="net-rule"><span>BREAKGLASS_SECONDARY</span><span class="cidr">172.16.0.0/12</span><span class="status-allow">ALLOW</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Cost Management -->
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <h2>Spending Budget</h2>
+        <p style="font-size: 28px; font-weight: bold; color: #fff; margin: 8px 0 4px;">6,667 <span style="font-size:14px;color:#8b949e;">credits / month</span></p>
+        <p style="font-size: 13px; color: #8b949e; margin: 0 0 12px;">~$20,000/mo at $3/credit</p>
+        <div style="position:relative; margin: 20px 0 30px;">
+          <div class="threshold-bar">
+            <div class="threshold-fill" style="width:100%;background:linear-gradient(90deg,#238636 0%,#238636 74%,#d29922 75%,#d29922 99%,#f85149 100%);"></div>
+          </div>
+          <div class="threshold-marker" style="left:75%;border-color:#d29922;">
+            <div class="threshold-label" style="color:#d29922;">75% Alert<br>5,000 cr</div>
+          </div>
+          <div class="threshold-marker" style="left:100%;border-color:#f85149;">
+            <div class="threshold-label" style="color:#f85149;">100%<br>6,667 cr</div>
+          </div>
+        </div>
+        <ul class="list">
+          <li class="green">Refresh: 6.5 hours (default)</li>
+          <li class="blue">Alerts &rarr; finops@ &middot; platform-admin@ &middot; finance-alerts@</li>
+          <li class="yellow">Type: Soft limit (notify only, no suspension)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <h2>Resource Monitor (Hard Limit)</h2>
+        <p style="font-size: 28px; font-weight: bold; color: #fff; margin: 8px 0 4px;">7,500 <span style="font-size:14px;color:#8b949e;">credits / month</span></p>
+        <p style="font-size: 13px; color: #8b949e; margin: 0 0 12px;">Safety net &middot; Monthly reset &middot; Suspend after current queries</p>
+        <div style="position:relative; margin: 20px 0 30px;">
+          <div class="threshold-bar">
+            <div class="threshold-fill" style="width:100%;background:linear-gradient(90deg,#238636 0%,#238636 74%,#d29922 75%,#d29922 89%,#f85149 90%,#f85149 100%);"></div>
+          </div>
+          <div class="threshold-marker" style="left:75%;border-color:#d29922;">
+            <div class="threshold-label" style="color:#d29922;">75% Notify<br>5,625 cr</div>
+          </div>
+          <div class="threshold-marker" style="left:90%;border-color:#f85149;">
+            <div class="threshold-label" style="color:#f85149;">90% Notify<br>6,750 cr</div>
+          </div>
+          <div class="threshold-marker" style="left:100%;border-color:#ff7b72;">
+            <div class="threshold-label" style="color:#ff7b72;">100% SUSPEND<br>7,500 cr</div>
+          </div>
+        </div>
+        <ul class="list">
+          <li class="red">Action: Suspend After Current Queries <span class="badge enforce">Hard</span></li>
+          <li class="yellow">Reset: Monthly (1st of month, 00:00 UTC)</li>
+          <li class="green">Scope: All warehouses in account</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <h2>Cost Allocation Tags</h2>
+        <p style="font-size:12px;color:#8b949e;margin:0 0 8px;">Required on all production resources <span class="badge enforce">Enforced</span></p>
+        <p style="font-size:12px;color:#8b949e;margin:8px 0 4px;">Core Platform Tags:</p>
+        <div class="tag-grid">
+          <div class="tag"><span class="key">domain</span></div>
+          <div class="tag"><span class="key">environment</span></div>
+          <div class="tag"><span class="key">dataproduct</span></div>
+          <div class="tag"><span class="key">workload</span></div>
+          <div class="tag"><span class="key">zone</span></div>
+        </div>
+        <p style="font-size:12px;color:#8b949e;margin:12px 0 4px;">FinOps Tags (Additional):</p>
+        <div class="tag-grid">
+          <div class="tag" style="border-color:#8957e5;"><span class="key">cost_center</span></div>
+          <div class="tag" style="border-color:#8957e5;"><span class="key">owner</span></div>
+          <div class="tag" style="border-color:#8957e5;"><span class="key">project</span></div>
+          <div class="tag" style="border-color:#8957e5;"><span class="key">application</span></div>
+        </div>
+        <p style="font-size:12px;color:#8b949e;margin:12px 0 4px;">Stored in:</p>
+        <ul class="list">
+          <li class="purple">PLAT_INFRA.GOVERNANCE (managed access schema)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#3fb950;"></div> Enabled / Allowed</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f85149;"></div> Blocked / Hard Limit</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d29922;"></div> Warning / Threshold</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#58a6ff;"></div> Configuration / Info</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#bc8cff;"></div> Governance / Tags</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8957e5;"></div> Organization Hub</div>
+  </div>
+
+</div>
+</body>
+</html>
